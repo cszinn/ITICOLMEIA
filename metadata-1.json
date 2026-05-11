@@ -1,0 +1,7 @@
+{
+  "name": "ITI Colmeia",
+  "description": "Sistema de monitoramento IoT para apicultura com integração Supabase e análise via IA.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

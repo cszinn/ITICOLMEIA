@@ -1,0 +1,67 @@
+
+-- ===============================
+-- 1️⃣ TABELA DE COLMEIAS (CONSOLIDADA)
+-- ===============================
+create table if not exists hives (
+  id text primary key,
+  name text not null,
+  location text,
+  temperature numeric default 0,
+  humidity numeric default 0,
+  total_weight numeric default 0,
+  status text default 'offline',
+  created_at timestamptz default now(),
+  last_updated timestamptz default now()
+);
+
+-- Regra de formato de ID (COLMEIA + números)
+alter table hives drop constraint if exists hive_id_format;
+alter table hives add constraint hive_id_format check (id ~ '^COLMEIA[0-9]+$');
+
+-- ===============================
+-- 2️⃣ ESTADO ATUAL DOS FAVOS (FRAMES)
+-- ===============================
+create table if not exists frames (
+  id bigint generated always as identity primary key,
+  hive_id text not null references hives(id) on delete cascade,
+  position int not null,
+  weight numeric not null default 0,
+  last_updated timestamptz default now(),
+  unique (hive_id, position)
+);
+
+-- ===============================
+-- 3️⃣ HISTÓRICO GERAL DA COLMEIA
+-- ===============================
+create table if not exists telemetry_logs (
+  id bigint generated always as identity primary key,
+  hive_id text not null references hives(id) on delete cascade,
+  temperature numeric,
+  humidity numeric,
+  total_weight numeric,
+  created_at timestamptz default now()
+);
+
+-- ===============================
+-- 4️⃣ HISTÓRICO DE PESO POR FAVO
+-- ===============================
+create table if not exists frame_logs (
+  id bigint generated always as identity primary key,
+  hive_id text not null references hives(id) on delete cascade,
+  position int not null,
+  weight numeric not null,
+  created_at timestamptz default now()
+);
+
+-- ===============================
+-- ÍNDICES (PERFORMANCE)
+-- ===============================
+create index if not exists idx_frames_hive on frames(hive_id);
+create index if not exists idx_telemetry_hive on telemetry_logs(hive_id);
+create index if not exists idx_frame_logs_hive on frame_logs(hive_id);
+
+-- Desabilitar RLS para facilitar integração inicial
+alter table hives disable row level security;
+alter table frames disable row level security;
+alter table telemetry_logs disable row level security;
+alter table frame_logs disable row level security;
